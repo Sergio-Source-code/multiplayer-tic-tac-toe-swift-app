@@ -12,6 +12,10 @@ on:
         required: true
       upload_token:
         required: true
+      reuse_run_id:
+        description: Run whose saved archive to send instead of compiling again (TestFlight only)
+        required: false
+        default: ''
 jobs:
   check-key:
     runs-on: ubuntu-latest
@@ -40,10 +44,23 @@ jobs:
     needs: check-key
     runs-on: macos-26
     timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Fetch saved archive
+        if: ${{ inputs.reuse_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: xcarchive-adhoc
+          path: build
+          run-id: ${{ inputs.reuse_run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
       - name: Build
         env:
+          REUSE_RUN_ID: ${{ inputs.reuse_run_id }}
           ASC_KEY_ID: ${{ secrets.MC_ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.MC_ASC_ISSUER_ID }}
           ASC_KEY_P8_B64: ${{ secrets.MC_ASC_KEY_P8_B64 }}
@@ -55,3 +72,22 @@ jobs:
           echo "::add-mask::$UPLOAD_TOKEN"
           xcodebuild -version; sw_vers
           bash .mobilecode/build.sh "${{ inputs.mode }}"
+      # Saved so a later "Send to TestFlight" can skip compiling. Tarred: artifacts drop file permissions.
+      - name: Save archive
+        if: ${{ success() && inputs.reuse_run_id == '' && hashFiles('build/app.tar') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcarchive-${{ inputs.mode }}
+          path: build/app.tar
+          retention-days: 3
+      # Marks the reused archive as already uploaded (Apple rejects the same build number twice).
+      - name: Mark archive used
+        if: ${{ success() && inputs.reuse_run_id != '' }}
+        run: echo used > used.txt
+      - name: Upload used marker
+        if: ${{ success() && inputs.reuse_run_id != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: used-${{ inputs.reuse_run_id }}
+          path: used.txt
+          retention-days: 3
