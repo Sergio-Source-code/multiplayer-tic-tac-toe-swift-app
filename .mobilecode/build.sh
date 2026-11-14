@@ -95,11 +95,17 @@ SCHEME="${PROJECT%.xcodeproj}"
 AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY"
       -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
 
-xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" \
-  -destination 'generic/platform=iOS' -archivePath build/app.xcarchive TARGETED_DEVICE_FAMILY=1 \
-  DEVELOPMENT_TEAM="$TEAM_ID" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-  CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER:-1}" \
-  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+if [ -n "${REUSE_RUN_ID:-}" ] && [ -f build/app.tar ]; then
+  echo "Reusing saved archive from run $REUSE_RUN_ID"
+  tar -xf build/app.tar -C build
+else
+  xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" \
+    -destination 'generic/platform=iOS' -archivePath build/app.xcarchive TARGETED_DEVICE_FAMILY=1 \
+    DEVELOPMENT_TEAM="$TEAM_ID" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+    CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER:-1}" \
+    CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+  tar -cf build/app.tar -C build app.xcarchive
+fi
 # The archive is unsigned on purpose: signing at archive time makes every fresh runner create a new Apple
 # Development certificate, and the account soon hits Apple's certificate limit. Signing happens once, in the
 # export below, with the cloud-managed distribution certificate that every build reuses.
