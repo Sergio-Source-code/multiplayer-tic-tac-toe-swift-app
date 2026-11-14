@@ -17,7 +17,7 @@ if openssl pkey -in "$KEY" -noout 2>/dev/null; then echo "openssl: key parses"; 
 if [ -f project.yml ]; then
   # App name: keep what project.yml says; the starter default becomes the repo name.
   APP_NAME="$(echo "${GITHUB_REPOSITORY#*/}" | tr '_-' '  ' | awk '{for(i=1;i<=NF;i++)$i=toupper(substr($i,1,1)) substr($i,2)}1')"
-  sed -i '' "s/CFBundleDisplayName: My App\$/CFBundleDisplayName: $APP_NAME/" project.yml
+  sed -i '' -E "s/(CFBundleDisplayName: *)\"?My App\"?[[:space:]]*\$/\\1$APP_NAME/" project.yml
   NAME="$(sed -n 's/.*CFBundleDisplayName: *//p' project.yml | head -1 | tr -d '"')"
   # Icon: a committed AppIcon wins; otherwise icon.json (symbol + colors) or a letter on a gradient.
   if [ -z "$(find . -name AppIcon.appiconset -not -path './build/*' | head -1)" ]; then
@@ -54,9 +54,12 @@ let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, b
 NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
 let rect = NSRect(x: 0, y: 0, width: size, height: size)
 NSGradient(starting: top, ending: bottom)!.draw(in: rect, angle: -60)
+// Soft light from the top so flat gradients read as a finished icon.
+NSGradient(starting: NSColor.white.withAlphaComponent(0.22), ending: NSColor.white.withAlphaComponent(0))!.draw(in: rect, angle: -90)
 
-if let sym = cfg["symbol"] as? String,
-   let base = NSImage(systemSymbolName: sym, accessibilityDescription: nil),
+// Never a bare letter: a missing or unknown symbol falls back to a neutral one.
+let symName = (cfg["symbol"] as? String).flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: nil) != nil ? $0 : nil } ?? "sparkles"
+if let base = NSImage(systemSymbolName: symName, accessibilityDescription: nil),
    let img = base.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 520, weight: .semibold)
         .applying(NSImage.SymbolConfiguration(paletteColors: [.white]))) {
     let s = img.size
