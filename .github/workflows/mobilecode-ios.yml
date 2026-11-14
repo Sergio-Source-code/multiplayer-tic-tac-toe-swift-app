@@ -38,7 +38,7 @@ jobs:
           rm -f key.p8
   build:
     needs: check-key
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
