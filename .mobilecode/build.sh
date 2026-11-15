@@ -141,12 +141,13 @@ if [ "$MODE" = "testflight" ]; then
     sleep 8
     xcrun simctl io "$SIM" screenshot build/shot1.png
     curl -fsS -X POST -H "X-Upload-Token: $UPLOAD_TOKEN" -H "Content-Type: image/png" \
-      --data-binary @build/shot1.png "${UPLOAD_URL%/ipa}/screenshot"
+      --data-binary @build/shot1.png "${DONE_URL%/uploaded}/screenshot"
   ) || true
 fi
 
 if [ "$MODE" != "testflight" ]; then
   IPA=$(ls build/out/*.ipa | head -1)
-  curl -fsS -X POST -H "X-Upload-Token: $UPLOAD_TOKEN" \
-    -H "Content-Type: application/octet-stream" --data-binary @"$IPA" "$UPLOAD_URL"
+  # The .ipa goes straight to storage (signed URL), never through our server; then we tell the server it's there.
+  curl -fsS -X PUT -F "cacheControl=3600" -F "file=@$IPA;type=application/octet-stream" "$UPLOAD_URL"
+  curl -fsS -X POST -H "X-Upload-Token: $UPLOAD_TOKEN" "$DONE_URL"
 fi
