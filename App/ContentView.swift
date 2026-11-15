@@ -25,45 +25,96 @@ struct LobbyView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "number.square.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.tint)
-            Text("Play online with a friend")
-                .font(.title3)
+            logo
+            VStack(spacing: 6) {
+                Text("Tic Tac Toe")
+                    .font(.system(size: 38, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("Play online with a friend")
+                    .font(.system(.title3, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
 
             Button {
                 model.create()
             } label: {
-                Text("Create Game").frame(maxWidth: .infinity)
+                Text("Create Game")
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 56)
+                    .background(Theme.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .shadow(color: Theme.pink.opacity(0.45), radius: 16, y: 8)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(.plain)
+            .padding(.top, 8)
 
-            HStack {
-                Rectangle().frame(height: 1).foregroundStyle(.quaternary)
-                Text("or").foregroundStyle(.secondary)
-                Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+            HStack(spacing: 12) {
+                Rectangle().frame(height: 1).foregroundStyle(.white.opacity(0.2))
+                Text("or join").font(.footnote.weight(.medium)).foregroundStyle(.white.opacity(0.6))
+                Rectangle().frame(height: 1).foregroundStyle(.white.opacity(0.2))
             }
 
-            HStack {
-                TextField("Room code", text: $code)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .textFieldStyle(.roundedBorder)
-                    .font(.title3.monospaced())
-                    .onSubmit { model.join(code: code) }
-                Button("Join") { model.join(code: code) }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .disabled(code.trimmingCharacters(in: .whitespaces).count != 6)
-            }
+            joinRow
 
             if let error = model.error {
-                Text(error).foregroundStyle(.red).font(.callout)
+                Text(error)
+                    .font(.callout)
+                    .foregroundStyle(Color(red: 1.0, green: 0.6, blue: 0.65))
+                    .multilineTextAlignment(.center)
             }
             Spacer()
         }
         .padding(24)
+        .background(GradientBackground())
+        .preferredColorScheme(.dark)
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var logo: some View {
+        Image(systemName: "number.square.fill")
+            .font(.system(size: 76))
+            .foregroundStyle(.white)
+            .frame(width: 128, height: 128)
+            .background(Theme.accent)
+            .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+            .shadow(color: Theme.blue.opacity(0.5), radius: 24, y: 10)
+    }
+
+    private var joinRow: some View {
+        HStack(spacing: 12) {
+            TextField("Room code", text: $code)
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+                .font(.system(.title3, design: .monospaced, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .frame(height: 56)
+                .background(Color.white.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                )
+                .onSubmit { model.join(code: code) }
+            Button {
+                model.join(code: code)
+            } label: {
+                Text("Join")
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24)
+                    .frame(height: 56)
+                    .background(Color.white.opacity(isCodeValid ? 0.25 : 0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isCodeValid)
+        }
+    }
+
+    private var isCodeValid: Bool {
+        code.trimmingCharacters(in: .whitespaces).count == 6
     }
 }
 
