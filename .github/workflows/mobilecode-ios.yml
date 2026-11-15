@@ -9,6 +9,10 @@ on:
       bundle_id:
         required: true
       upload_url:
+        description: Signed storage URL the .ipa is uploaded to directly (ad-hoc builds)
+        required: false
+        default: ''
+      done_url:
         required: true
       upload_token:
         required: true
@@ -67,9 +71,11 @@ jobs:
           TEAM_ID: ${{ secrets.MC_TEAM_ID }}
           BUNDLE_ID: ${{ inputs.bundle_id }}
           UPLOAD_URL: ${{ inputs.upload_url }}
+          DONE_URL: ${{ inputs.done_url }}
           UPLOAD_TOKEN: ${{ inputs.upload_token }}
         run: |
           echo "::add-mask::$UPLOAD_TOKEN"
+          [ -z "$UPLOAD_URL" ] || echo "::add-mask::$UPLOAD_URL"
           xcodebuild -version; sw_vers
           bash .mobilecode/build.sh "${{ inputs.mode }}"
       # Saved so a later "Send to TestFlight" can skip compiling. Tarred: artifacts drop file permissions.
