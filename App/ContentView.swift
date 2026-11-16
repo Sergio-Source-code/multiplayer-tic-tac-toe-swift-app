@@ -29,10 +29,10 @@ struct LobbyView: View {
             VStack(spacing: 6) {
                 Text("Tic Tac Toe")
                     .font(.system(size: 38, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.black)
                 Text("Play online with a friend")
                     .font(.system(.title3, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.black.opacity(0.55))
             }
 
             Button {
@@ -44,15 +44,14 @@ struct LobbyView: View {
                     .frame(maxWidth: .infinity, minHeight: 56)
                     .background(Theme.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .shadow(color: Theme.pink.opacity(0.45), radius: 16, y: 8)
             }
             .buttonStyle(.plain)
             .padding(.top, 8)
 
             HStack(spacing: 12) {
-                Rectangle().frame(height: 1).foregroundStyle(.white.opacity(0.2))
-                Text("or join").font(.footnote.weight(.medium)).foregroundStyle(.white.opacity(0.6))
-                Rectangle().frame(height: 1).foregroundStyle(.white.opacity(0.2))
+                Rectangle().frame(height: 1).foregroundStyle(.black.opacity(0.12))
+                Text("or join").font(.footnote.weight(.medium)).foregroundStyle(.black.opacity(0.5))
+                Rectangle().frame(height: 1).foregroundStyle(.black.opacity(0.12))
             }
 
             joinRow
@@ -60,14 +59,14 @@ struct LobbyView: View {
             if let error = model.error {
                 Text(error)
                     .font(.callout)
-                    .foregroundStyle(Color(red: 1.0, green: 0.6, blue: 0.65))
+                    .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
             Spacer()
         }
         .padding(24)
-        .background(GradientBackground())
-        .preferredColorScheme(.dark)
+        .background(Color(white: 0.97).ignoresSafeArea())
+        .preferredColorScheme(.light)
         .toolbar(.hidden, for: .navigationBar)
     }
 
@@ -78,7 +77,6 @@ struct LobbyView: View {
             .frame(width: 128, height: 128)
             .background(Theme.accent)
             .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-            .shadow(color: Theme.blue.opacity(0.5), radius: 24, y: 10)
     }
 
     private var joinRow: some View {
@@ -87,25 +85,21 @@ struct LobbyView: View {
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
                 .font(.system(.title3, design: .monospaced, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.black)
                 .padding(.horizontal, 16)
                 .frame(height: 56)
-                .background(Color.white.opacity(0.12))
+                .background(Color.black.opacity(0.06))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
-                )
                 .onSubmit { model.join(code: code) }
             Button {
                 model.join(code: code)
             } label: {
                 Text("Join")
                     .font(.system(.headline, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(isCodeValid ? Color.white : Color.black.opacity(0.35))
                     .padding(.horizontal, 24)
                     .frame(height: 56)
-                    .background(Color.white.opacity(isCodeValid ? 0.25 : 0.1))
+                    .background(isCodeValid ? Theme.blue : Color.black.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
